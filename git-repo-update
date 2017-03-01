@@ -1,0 +1,41 @@
+#!/bin/bash
+# update all repo
+
+while getopts p:b:f: option
+do
+        case "${option}"
+        in
+                p) path=${OPTARG};;
+		b) branch=${OPTARG};;
+		f) folders=${OPTARG};;
+		*) echo "Unknown option $OPTARG" ;exit 1;;
+        esac
+done
+
+if [ -z "$folders" ]
+then
+	echo -e "set folder separate by comma no whitespace. \n usage: \n\t -f folder1,folder2,folder3"
+fi	
+
+if [ -z "$path" ] 
+then
+	echo -e "set root path. \n usage: \n\t -p rootpath"
+	exit 1
+fi
+
+if [ -z "$branch" ]
+then 
+	branch="master"
+fi
+
+IFS=',' read -r -a array <<< "$folders"
+
+for i in "${array[@]}"
+do
+	echo -e "\n\n[*] Fetching folder ${path}${i}" 
+	cd ${path}$i;
+	git checkout ${branch};
+	git pull origin ${branch};
+done
+
+exit 1
