@@ -21,6 +21,7 @@ OPTIONS :
     
     
 EXAMPLE:
+
     - to pull multiple folder with one branch name
     
         example:
