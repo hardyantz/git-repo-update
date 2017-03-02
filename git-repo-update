@@ -1,23 +1,31 @@
 #!/bin/bash
 # update all repo
 
-while getopts p:b:f: option
+
+while getopts p:b:f:a: option
 do
-        case "${option}"
+    case "${option}"
         in
-                p) path=${OPTARG};;
+        p) path=${OPTARG};;
 		b) branch=${OPTARG};;
 		f) folders=${OPTARG};;
+        a) fb=${OPTARG};;
 		*) echo "Unknown option $OPTARG" ;exit 1;;
-        esac
+    esac
 done
 
-if [ -z "$folders" ]
+function gitupdate {
+    cd $1;
+    git checkout $2;
+    git pull origin $2;
+}
+
+if [ -z "$folders" ] && [ -z "$fb" ]
 then
 	echo -e "set folder separate by comma no whitespace. \n usage: \n\t -f folder1,folder2,folder3"
 fi	
 
-if [ -z "$path" ] 
+if [ -z "$path" ] && [ -z "$fb" ]
 then
 	echo -e "set root path. \n usage: \n\t -p rootpath"
 	exit 1
@@ -28,14 +36,31 @@ then
 	branch="master"
 fi
 
-IFS=',' read -r -a array <<< "$folders"
+if [ -z "$fb" ]
+then
+    IFS=',' read -r -a array <<< "$folders"
 
-for i in "${array[@]}"
-do
-	echo -e "\n\n[*] Fetching folder ${path}${i}" 
-	cd ${path}$i;
-	git checkout ${branch};
-	git pull origin ${branch};
-done
+    for i in "${array[@]}"
+    do
+    	echo -e "\n\n[*] Fetching folder ${path}${i}"
+        gitupdate ${path}$i ${branch} 
+    done
+else 
+    IFS=',' read -r -a folder <<< "$fb"
+
+    for i in "${folder[@]}"
+    do
+        IFS=':' read -r -a expl <<< "$i"
+
+        if [ -z "${expl[0]}" ] || [ -z "${expl[1]}" ]
+        then 
+            echo -e "empty folder or branch \nusage: \n\t -a fullpath1:branch1,fullpath2:branch2 "
+            exit 1
+        fi    
+
+        echo -e "\n\n[*] Fetching folder ${expl[0]}"
+        gitupdate ${expl[0]} ${expl[1]} 
+    done
+fi
 
 exit 1
